@@ -7,17 +7,26 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
 
+import java.util.List;
 import java.util.logging.Level;
 
 public class Gate {
-    private Block startBlock; // This is the block that the sign is placed against. Should be middle right
-    private BlockFace direction;
-    private String name;
+    private final Block startBlock; // This is the block that the sign is placed against. Should be middle right
+    private final BlockFace direction;
+    private final String name;
+    private List<Gate> visibleDestinations;
+    private Gate selectedDestination;
 
     public Gate(Block startBlock, BlockFace direction, String name) {
         this.startBlock = startBlock;
         this.direction = direction;
         this.name = name;
+        visibleDestinations = null;
+        selectedDestination = null;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public Block getStartBlock() {
@@ -43,6 +52,10 @@ public class Gate {
         gate.addButton(gate.getSignBlock(), direction);
         gate.setSignState(gate.getSignBlock());
 
+        // Gate now created. Get an instance of the manager and add the new gate to it
+        GateManager manager = GateManager.getInstance();
+        manager.addNewGate(gate);
+
         return gate;
     }
 
@@ -54,14 +67,27 @@ public class Gate {
         }
         Sign sign = (Sign) state;
         sign.setLine(0, "§n" + name);
-        // TODO get the other connected gates at this point
-        sign.setLine(1, "");
-        sign.setLine(2, "");
-        sign.setLine(3, "Test");
-        boolean updated = sign.update(true, true);
+
+        GateManager gateManager = GateManager.getInstance();
+        List<Gate> gates = gateManager.getActiveGates();
+        int lastIndex = Math.min(gates.size(), 2);
+        visibleDestinations = gates.subList(0, lastIndex);
+        setDestinations(sign, visibleDestinations);
+        boolean updated = sign.update();
 
         Bukkit.getLogger().log(Level.INFO, "Updated the sign: " + updated);
         Bukkit.getLogger().log(Level.INFO, "Set gate name to " + name);
+    }
+
+    private void setDestinations(Sign sign, List<Gate> destinations) {
+        int index = 1;
+        for (Gate gate : destinations) {
+            String name = gate.getName();
+            if (!name.equals(this.name)) {
+                sign.setLine(index, name);
+                index++;
+            }
+        }
     }
 
     private void clearMiddleBlocks() {

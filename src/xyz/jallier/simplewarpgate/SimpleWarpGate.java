@@ -9,6 +9,9 @@ public class SimpleWarpGate extends JavaPlugin {
     public void onEnable() {
         this.getLogger().log(Level.INFO, "Loading SimpleWarpGate...");
 
+        GateManager gateManager = GateManager.getInstance();
+        // Load the gates or whatever here
+
         this.getCommand("ping").setExecutor(new CommandPing());
         this.getServer().getPluginManager().registerEvents(new SignListener(), this);
 

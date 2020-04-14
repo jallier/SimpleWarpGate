@@ -27,6 +27,7 @@ public class SignListener implements Listener {
             "ay lmao",
             "Can't think of other names",
     };
+    // TODO Handle breaking sign deactivating gate
 
     /**
      * Handle the player entering the portal
