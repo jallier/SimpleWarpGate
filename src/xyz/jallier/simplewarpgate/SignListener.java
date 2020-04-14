@@ -14,7 +14,6 @@ import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -116,10 +115,7 @@ public class SignListener implements Listener {
      * @param signChangeEvent event
      */
     @EventHandler
-    public void onSignChanged(SignChangeEvent signChangeEvent) {
-        logger.log(Level.INFO, "Sign change event fired");
-        logger.log(Level.INFO, "" + signChangeEvent.getBlock().getBlockData());
-
+    public void onSignChange(SignChangeEvent signChangeEvent) {
         // Return early if sign is wrong type
         Block sign = signChangeEvent.getBlock();
         if (sign.getType() != Material.OAK_WALL_SIGN) {
@@ -128,155 +124,32 @@ public class SignListener implements Listener {
 
         // Get the sign that changed, then get the block behind it
         WallSign wallSign = (WallSign) signChangeEvent.getBlock().getBlockData();
-        BlockFace signFace = wallSign.getFacing();
-        Block placedAgainst = sign.getRelative(signFace.getOppositeFace());
+        BlockFace signFaceDirection = wallSign.getFacing();
+        Block placedAgainst = sign.getRelative(signFaceDirection.getOppositeFace());
         if (placedAgainst.getType() != Material.OBSIDIAN) {
             return;
         }
+        logger.log(Level.INFO, "Sign placed against valid portal material; checking");
 
         // Check the blocks around the sign for portal pattern
         // Assuming sign is placed on the right for now
-
-        logger.log(Level.INFO, "Sign data " + sign.getBlockData());
-        logger.log(Level.INFO, "Sign facing " + signFace);
-        logger.log(Level.INFO, "Sign placed against " + placedAgainst);
-        logger.log(Level.INFO, "Sign text is " + Arrays.toString(signChangeEvent.getLines()));
-
-        Block top = placedAgainst.getRelative(0, 2, 0);
-        boolean gateIsValid = checkGate(top, signFace);
-        logger.log(Level.INFO, "Gate is valid: " + gateIsValid);
+        boolean gateIsValid = Gate.checkBlocksAreValid(placedAgainst, signFaceDirection);
         if (!gateIsValid) {
+            logger.log(Level.INFO, "Gate is not valid");
             return;
         }
 
-        // Add an activation button
-        addButton(placedAgainst, signFace);
-
-        // Test modifying the sign text
-        // We will construct a gate object here to handle saving etc, and move this code to that class later
-        String signName = signChangeEvent.getLine(0);
-        signChangeEvent.setLine(0, "§n" + signName);
-        for (int i = 0; i < 3; i++) {
-            signChangeEvent.setLine(i + 1, signOptions[i]);
+        // Cancel the event to make the sign text update correctly
+        signChangeEvent.setCancelled(true);
+        String gateName = signChangeEvent.getLine(0);
+        if (gateName == null || gateName.equals("")) {
+            logger.log(Level.INFO, "All gates require a name in the top line of the sign");
+            return;
         }
+
+        logger.log(Level.INFO, "Creating new gate: " + gateName);
+        Gate newGate = Gate.createGate(placedAgainst, signFaceDirection, gateName);
+        // TODO Add save here once GateManager implemented
+        logger.log(Level.INFO, "Created new gate " + gateName);
     }
-
-    private void addButton(Block signBlock, BlockFace direction) {
-        // pls extract me to my own method
-        Block opposite = null;
-        // assume north facing as default
-        int[] xIndex = new int[]{1, 2, 3};
-        int[] zIndex = new int[]{1, 2, 3};
-        if (direction == BlockFace.NORTH) {
-            zIndex[0] = 0;
-            zIndex[1] = 0;
-            zIndex[2] = 0;
-        }
-        if (direction == BlockFace.SOUTH) {
-            xIndex[0] = -1;
-            xIndex[1] = -2;
-            xIndex[2] = -3;
-            zIndex[0] = 0;
-            zIndex[1] = 0;
-            zIndex[2] = 0;
-        }
-        if (direction == BlockFace.EAST) {
-            xIndex[0] = 0;
-            xIndex[1] = 0;
-            xIndex[2] = 0;
-        }
-        if (direction == BlockFace.WEST) {
-            xIndex[0] = 0;
-            xIndex[1] = 0;
-            xIndex[2] = 0;
-            zIndex[0] = -1;
-            zIndex[1] = -2;
-            zIndex[2] = -3;
-        }
-
-        opposite = signBlock.getRelative(xIndex[2], 0, zIndex[2]);
-        Block buttonBlock = opposite.getRelative(direction);
-        buttonBlock.setType(Material.STONE_BUTTON);
-    }
-
-    // assuming base block is top right corner
-    private boolean checkGate(Block baseBlock, BlockFace direction) {
-        Block nextBlock = baseBlock;
-
-        // This should be a loop lol
-        boolean topLine = checkGateLine(nextBlock, direction, true);
-        nextBlock = nextBlock.getRelative(BlockFace.DOWN);
-        boolean firstLine = checkGateLine(nextBlock, direction, false);
-        nextBlock = nextBlock.getRelative(BlockFace.DOWN);
-        boolean secondLine = checkGateLine(nextBlock, direction, false); // aka middle
-        nextBlock = nextBlock.getRelative(BlockFace.DOWN);
-        boolean thirdLine = checkGateLine(nextBlock, direction, false);
-        nextBlock = nextBlock.getRelative(BlockFace.DOWN);
-        boolean bottomLine = checkGateLine(nextBlock, direction, true);
-
-        return topLine && firstLine && secondLine && thirdLine && bottomLine;
-    }
-
-    private boolean checkGateLine(Block baseBlock, BlockFace direction, boolean isEndLine) {
-        Block opposite = null;
-        // assume north facing as default
-        int[] xIndex = new int[]{1, 2, 3};
-        int[] zIndex = new int[]{1, 2, 3};
-        if (direction == BlockFace.NORTH) {
-            zIndex[0] = 0;
-            zIndex[1] = 0;
-            zIndex[2] = 0;
-        }
-        if (direction == BlockFace.SOUTH) {
-            xIndex[0] = -1;
-            xIndex[1] = -2;
-            xIndex[2] = -3;
-            zIndex[0] = 0;
-            zIndex[1] = 0;
-            zIndex[2] = 0;
-        }
-        if (direction == BlockFace.EAST) {
-            xIndex[0] = 0;
-            xIndex[1] = 0;
-            xIndex[2] = 0;
-        }
-        if (direction == BlockFace.WEST) {
-            xIndex[0] = 0;
-            xIndex[1] = 0;
-            xIndex[2] = 0;
-            zIndex[0] = -1;
-            zIndex[1] = -2;
-            zIndex[2] = -3;
-        }
-        Block air1 = baseBlock.getRelative(xIndex[0], 0, zIndex[0]);
-        Block air2 = baseBlock.getRelative(xIndex[1], 0, zIndex[1]);
-        opposite = baseBlock.getRelative(xIndex[2], 0, zIndex[2]);
-        // Check block positions are correct
-        if (isEndLine) {
-            if (air1.getType() != Material.OBSIDIAN) {
-                return false;
-            }
-            if (air2.getType() != Material.OBSIDIAN) {
-                return false;
-            }
-        } else {
-            if (baseBlock.getType() != Material.OBSIDIAN) {
-                return false;
-            }
-            if (air1.getType() != Material.AIR) {
-                return false;
-            }
-            if (air2.getType() != Material.AIR) {
-                return false;
-            }
-            if (opposite.getType() != Material.OBSIDIAN) {
-                return false;
-            }
-        }
-
-        logger.log(Level.INFO, "Gate line is valid");
-
-        return true;
-    }
-
 }
