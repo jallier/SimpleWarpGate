@@ -5,7 +5,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.Sign;
 import org.bukkit.block.data.type.WallSign;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -14,6 +13,7 @@ import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -79,35 +79,34 @@ public class SignListener implements Listener {
     }
 
     /**
-     * Handle the player clicking the sign to activate the gate
+     * Handle the player clicking the sign to choose a destination
      *
      * @param playerInteractEvent event
      */
     @EventHandler
     public void onSignInteract(PlayerInteractEvent playerInteractEvent) {
         // Make sure the player is trying to use a gate
-        // Later we will check the stored gates sign positions, but for now, just check the material
         Block clickedBlock = playerInteractEvent.getClickedBlock();
         if (clickedBlock == null || clickedBlock.getType() != Material.OAK_WALL_SIGN) {
             return;
         }
-        // Now check if sign belongs to an active gate
-        // TODO
 
-        // Get the list of connected gates and list them in the sign
-        // Can't do too much more without proper gate state
-        Sign sign = (Sign) clickedBlock.getState();
-        String[] connectedGateNames = signOptions;
-        for (int i = 1; i < Math.min(connectedGateNames.length, 3 + 1); i++) {
-            if (i == 1) {
-                sign.setLine(i, "> " + signOptions[i - 1]);
-                continue;
+        GateManager gateManager = GateManager.getInstance();
+        List<Gate> gates = gateManager.getActiveGates();
+        Gate clickedGate = null;
+        for (Gate gate : gates) {
+            if (gate.signBelongsToGate(clickedBlock)) {
+                clickedGate = gate;
+                break;
             }
-            sign.setLine(i, signOptions[i - 1]);
         }
-        sign.update();
+        if (clickedGate == null) {
+            // clicked sign did not belong to a gate
+            return;
+        }
 
-        // Set the selected destination in the gate state
+        // Now we know the sign belongs to a gate; Ask the gate to set its sign state
+        clickedGate.selectDestination();
     }
 
     /**
@@ -150,7 +149,6 @@ public class SignListener implements Listener {
 
         logger.log(Level.INFO, "Creating new gate: " + gateName);
         Gate newGate = Gate.createGate(placedAgainst, signFaceDirection, gateName);
-        // TODO Add save here once GateManager implemented
         logger.log(Level.INFO, "Created new gate " + gateName);
     }
 }

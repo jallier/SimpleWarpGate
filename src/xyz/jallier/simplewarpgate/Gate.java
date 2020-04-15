@@ -14,14 +14,17 @@ public class Gate {
     private final Block startBlock; // This is the block that the sign is placed against. Should be middle right
     private final BlockFace direction;
     private final String name;
-    private List<Gate> visibleDestinations;
+
+    private int cursorIndex;
+    private int gateListIndex;
     private Gate selectedDestination;
 
     public Gate(Block startBlock, BlockFace direction, String name) {
         this.startBlock = startBlock;
         this.direction = direction;
         this.name = name;
-        visibleDestinations = null;
+        cursorIndex = 0;
+        gateListIndex = 0;
         selectedDestination = null;
     }
 
@@ -50,7 +53,7 @@ public class Gate {
 
         gate.clearMiddleBlocks();
         gate.addButton(gate.getSignBlock(), direction);
-        gate.setSignState(gate.getSignBlock());
+        gate.setInitialSignState(gate.getSignBlock());
 
         // Gate now created. Get an instance of the manager and add the new gate to it
         GateManager manager = GateManager.getInstance();
@@ -59,7 +62,7 @@ public class Gate {
         return gate;
     }
 
-    private void setSignState(Block signBlock) {
+    private void setInitialSignState(Block signBlock) {
         BlockState state = signBlock.getState();
         if (!(state instanceof Sign)) {
             Bukkit.getLogger().log(Level.INFO, "Block passed is not an instance of Sign");
@@ -70,24 +73,11 @@ public class Gate {
 
         GateManager gateManager = GateManager.getInstance();
         List<Gate> gates = gateManager.getActiveGates();
-        int lastIndex = Math.min(gates.size(), 2);
-        visibleDestinations = gates.subList(0, lastIndex);
-        setDestinations(sign, visibleDestinations);
-        boolean updated = sign.update();
+        renderDisplay(sign, gates, cursorIndex, gateListIndex);
+        sign.update();
 
-        Bukkit.getLogger().log(Level.INFO, "Updated the sign: " + updated);
+        Bukkit.getLogger().log(Level.INFO, "Updated the sign");
         Bukkit.getLogger().log(Level.INFO, "Set gate name to " + name);
-    }
-
-    private void setDestinations(Sign sign, List<Gate> destinations) {
-        int index = 1;
-        for (Gate gate : destinations) {
-            String name = gate.getName();
-            if (!name.equals(this.name)) {
-                sign.setLine(index, name);
-                index++;
-            }
-        }
     }
 
     private void clearMiddleBlocks() {
@@ -115,6 +105,80 @@ public class Gate {
 
     private Block getSignBlock() {
         return startBlock.getRelative(direction);
+    }
+
+    private Sign getSignBlockState() {
+        return (Sign) getSignBlock().getState();
+    }
+
+    /**
+     * Check if a passed in sign block belongs to this gate
+     *
+     * @param sign the sign to check
+     * @return if the sign belongs to the gate
+     */
+    public boolean signBelongsToGate(Block sign) {
+        return getSignBlock().getLocation().equals(sign.getLocation());
+    }
+
+    /**
+     * Cycle the destinations on the sign
+     */
+    public void selectDestination() {
+        // Cycle the display on the sign. Either move the cursor, or roll the names
+        cycleDisplay();
+        // TODO Update the currently selected gate as the destination
+    }
+
+    private void cycleDisplay() {
+        GateManager gateManager = GateManager.getInstance();
+        List<Gate> gates = gateManager.getActiveGates();
+        Sign sign = getSignBlockState();
+
+        int windowEnd = gateListIndex + 2;
+        int listEndPos = gates.size() - 1;
+
+        if (gates.size() > cursorIndex && cursorIndex <= 3) {
+            cursorIndex++;
+            renderDisplay(sign, gates, cursorIndex, gateListIndex);
+        } else if (windowEnd < listEndPos) {
+            gateListIndex++;
+            renderDisplay(sign, gates, cursorIndex, gateListIndex);
+        } else {
+            cursorIndex = 1;
+            gateListIndex = 0;
+            renderDisplay(sign, gates, cursorIndex, gateListIndex);
+        }
+    }
+
+    private void renderDisplay(Sign sign, List<Gate> destinations, int cursorPosition, int listPosition) {
+        int size = destinations.size();
+        if (size == 0 || size > 3) {
+            return;
+        }
+        int index = listPosition;
+        for (int i = 1; i < 4; i++) {
+            Bukkit.getLogger().log(Level.INFO, "Index is: " + index);
+            Gate gate = destinations.get(index);
+            String name = gate.getName();
+            if (name.equals(this.name)) {
+                index++;
+                if (index >= size) {
+                    break;
+                }
+                i--;
+                continue;
+            }
+            if (i == cursorPosition) {
+                name = ">" + name;
+            }
+            sign.setLine(i, name);
+            index++;
+            if (index >= size) {
+                break;
+            }
+        }
+        sign.update();
     }
 
     /**

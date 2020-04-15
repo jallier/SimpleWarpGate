@@ -8,7 +8,7 @@ import java.util.List;
  */
 public class GateManager {
     private static GateManager gateManager = null;
-    private List<Gate> gates;
+    private final List<Gate> gates;
 
     private GateManager() {
         gates = new ArrayList<>();
@@ -27,7 +27,12 @@ public class GateManager {
         }
     }
 
+    /**
+     * Return a new list (to prevent modifying the managers list state) from the active gates currently stored
+     *
+     * @return list of gates
+     */
     public List<Gate> getActiveGates() {
-        return gates;
+        return new ArrayList<>(gates);
     }
 }
