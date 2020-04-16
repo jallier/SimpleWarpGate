@@ -8,6 +8,8 @@ public class SimpleWarpGate extends JavaPlugin {
     @Override
     public void onEnable() {
         this.getLogger().log(Level.INFO, "Loading SimpleWarpGate...");
+        GateManager.getInstance().loadStateFromFile();
+        this.getLogger().log(Level.INFO, "Reading the data storage file");
 
         GateManager gateManager = GateManager.getInstance();
         // Load the gates or whatever here
@@ -20,6 +22,7 @@ public class SimpleWarpGate extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        super.onDisable();
+        GateManager.getInstance().writeStateToFile();
+        this.getLogger().log(Level.INFO, "Wrote the data storage file");
     }
 }

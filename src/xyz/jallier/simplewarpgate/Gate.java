@@ -11,7 +11,10 @@ import java.util.List;
 import java.util.logging.Level;
 
 public class Gate {
-    private final Block startBlock; // This is the block that the sign is placed against. Should be middle right
+    /**
+     * This is the block the sign is placed against. Should be middle right
+     */
+    private final Block startBlock;
     private final BlockFace direction;
     private final String name;
 
@@ -26,6 +29,16 @@ public class Gate {
         cursorIndex = 0;
         gateListIndex = 0;
         selectedDestination = null;
+    }
+
+    @Override
+    public String toString() {
+        String world = startBlock.getWorld().getName();
+        int x = startBlock.getX();
+        int y = startBlock.getY();
+        int z = startBlock.getZ();
+        String direction = this.direction.name();
+        return String.format("%s::%s::%s,%s,%s::%s", name, world, x, y, z, direction);
     }
 
     public String getName() {
