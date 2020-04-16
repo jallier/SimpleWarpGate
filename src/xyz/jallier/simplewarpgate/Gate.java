@@ -1,6 +1,7 @@
 package xyz.jallier.simplewarpgate;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -19,16 +20,18 @@ public class Gate {
     private final String name;
 
     private int cursorIndex;
-    private int gateListIndex;
+    private int gateListWindowIndex;
     private Gate selectedDestination;
+    private boolean portalActive;
 
     public Gate(Block startBlock, BlockFace direction, String name) {
         this.startBlock = startBlock;
         this.direction = direction;
         this.name = name;
         cursorIndex = 0;
-        gateListIndex = 0;
+        gateListWindowIndex = 0;
         selectedDestination = null;
+        portalActive = false;
     }
 
     @Override
@@ -86,7 +89,7 @@ public class Gate {
 
         GateManager gateManager = GateManager.getInstance();
         List<Gate> gates = gateManager.getActiveGates();
-        renderDisplay(sign, gates, cursorIndex, gateListIndex);
+        renderDisplay(sign, gates, cursorIndex, gateListWindowIndex);
         sign.update();
 
         Bukkit.getLogger().log(Level.INFO, "Updated the sign");
@@ -116,6 +119,48 @@ public class Gate {
         return middleBlocks;
     }
 
+    public void activatePortal() {
+        if (selectedDestination == null) { // Only allow if destination has already been set
+            return;
+        }
+        Block[] middleBlocks = getMiddleBlocks();
+        for (Block block : middleBlocks) {
+            block.setType(Material.NETHER_PORTAL);
+        }
+        portalActive = true;
+    }
+
+    public void deactivatePortal() {
+        Block[] middleBlocks = getMiddleBlocks();
+        for (Block block : middleBlocks) {
+            block.setType(Material.AIR);
+        }
+        portalActive = false;
+    }
+
+    public boolean portalIsActive() {
+        return portalActive;
+    }
+
+    /**
+     * Get the location that the player will teleport to when they select this gate
+     *
+     * @return the location
+     */
+    public Location getDestination() {
+        int[][] directionIndices = getDirectionIndices(direction);
+        return getStartBlock().getRelative(directionIndices[0][0], -1, directionIndices[1][0]).getLocation();
+    }
+
+    private Block getButtonBlock() {
+        int[][] directionIndices = getDirectionIndices(direction);
+        return getSignBlock().getRelative(directionIndices[0][2], 0, directionIndices[1][2]);
+    }
+
+    public boolean buttonBelongsToGate(Block button) {
+        return getButtonBlock().getLocation().equals(button.getLocation());
+    }
+
     private Block getSignBlock() {
         return startBlock.getRelative(direction);
     }
@@ -135,33 +180,34 @@ public class Gate {
     }
 
     /**
-     * Cycle the destinations on the sign
+     * Cycle the destinations on the sign and set the selected Gate
      */
     public void selectDestination() {
-        // Cycle the display on the sign. Either move the cursor, or roll the names
-        cycleDisplay();
-        // TODO Update the currently selected gate as the destination
-    }
-
-    private void cycleDisplay() {
         GateManager gateManager = GateManager.getInstance();
         List<Gate> gates = gateManager.getActiveGates();
         Sign sign = getSignBlockState();
 
-        int windowEnd = gateListIndex + 2;
+        int windowEnd = gateListWindowIndex + 2;
         int listEndPos = gates.size() - 1;
 
-        if (gates.size() > cursorIndex && cursorIndex <= 3) {
+        if (gates.size() > cursorIndex && cursorIndex <= 3) { // Move the curson down
             cursorIndex++;
-            renderDisplay(sign, gates, cursorIndex, gateListIndex);
-        } else if (windowEnd < listEndPos) {
-            gateListIndex++;
-            renderDisplay(sign, gates, cursorIndex, gateListIndex);
-        } else {
+            renderDisplay(sign, gates, cursorIndex, gateListWindowIndex);
+        } else if (windowEnd < listEndPos) { // Scroll the list up without moving the cursor
+            gateListWindowIndex++;
+            renderDisplay(sign, gates, cursorIndex, gateListWindowIndex);
+        } else { // Reset everything to the top
             cursorIndex = 1;
-            gateListIndex = 0;
-            renderDisplay(sign, gates, cursorIndex, gateListIndex);
+            gateListWindowIndex = 0;
+            renderDisplay(sign, gates, cursorIndex, gateListWindowIndex);
         }
+
+        int gateListIndex = gateListWindowIndex + cursorIndex;
+        Gate destinationGate = gates.get(gateListIndex);
+        if (destinationGate.equals(this)) {
+            destinationGate = gates.get(gateListIndex + 1);
+        }
+        selectedDestination = destinationGate;
     }
 
     private void renderDisplay(Sign sign, List<Gate> destinations, int cursorPosition, int listPosition) {
@@ -302,5 +348,9 @@ public class Gate {
         }
 
         return true;
+    }
+
+    public Gate getSelectedDestination() {
+        return selectedDestination;
     }
 }

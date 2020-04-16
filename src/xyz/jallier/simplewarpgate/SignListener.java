@@ -64,17 +64,24 @@ public class SignListener implements Listener {
         logger.log(Level.INFO, "Stone button was clicked");
 
         // Once the gate class is done, check if the button belongs to a gate first
-        // TODO
+        GateManager gateManager = GateManager.getInstance();
+        List<Gate> gates = gateManager.getActiveGates();
+        Gate clickedGate = null;
+        for (Gate gate : gates) {
+            if (gate.buttonBelongsToGate(clickedBlock)) {
+                clickedGate = gate;
+                break;
+            }
+        }
+        if (clickedGate == null) {
+            // clicked sign did not belong to a gate
+            return;
+        }
 
-        // Get the destination state from the gate
-        // TODO
-
-        // Set inner air blocks to portal material
-        Block innerOne = clickedBlock.getRelative(-1, 0, 1);
-        if (innerOne.getType() == Material.NETHER_PORTAL) {
-            innerOne.setType(Material.AIR);
+        if (!clickedGate.portalIsActive()) {
+            clickedGate.activatePortal();
         } else {
-            innerOne.setType(Material.NETHER_PORTAL);
+            clickedGate.deactivatePortal();
         }
     }
 
