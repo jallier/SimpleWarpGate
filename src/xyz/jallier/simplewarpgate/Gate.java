@@ -184,7 +184,7 @@ public class Gate {
      */
     public void selectDestination() {
         GateManager gateManager = GateManager.getInstance();
-        List<Gate> gates = gateManager.getActiveGates();
+        List<Gate> gates = gateManager.getActiveGates(true, this);
         Sign sign = getSignBlockState();
 
         int windowEnd = gateListWindowIndex + 2;
@@ -202,12 +202,10 @@ public class Gate {
             renderDisplay(sign, gates, cursorIndex, gateListWindowIndex);
         }
 
-        int gateListIndex = gateListWindowIndex + cursorIndex;
+        int gateListIndex = gateListWindowIndex + cursorIndex - 1;
         Gate destinationGate = gates.get(gateListIndex);
-        if (destinationGate.equals(this)) {
-            destinationGate = gates.get(gateListIndex + 1);
-        }
         selectedDestination = destinationGate;
+        Bukkit.getLogger().log(Level.INFO, "Destination gate set to: " + destinationGate.getName());
     }
 
     private void renderDisplay(Sign sign, List<Gate> destinations, int cursorPosition, int listPosition) {
@@ -217,25 +215,19 @@ public class Gate {
         }
         int index = listPosition;
         for (int i = 1; i < 4; i++) {
-            Bukkit.getLogger().log(Level.INFO, "Index is: " + index);
-            Gate gate = destinations.get(index);
-            String name = gate.getName();
-            if (name.equals(this.name)) {
-                index++;
-                if (index >= size) {
-                    break;
-                }
-                i--;
-                continue;
+//            Bukkit.getLogger().log(Level.INFO, "Index is: " + index);
+            String name;
+            if (index < size) {
+                Gate gate = destinations.get(index);
+                name = gate.getName();
+            } else {
+                name = "";
             }
             if (i == cursorPosition) {
                 name = ">" + name;
             }
             sign.setLine(i, name);
             index++;
-            if (index >= size) {
-                break;
-            }
         }
         sign.update();
     }

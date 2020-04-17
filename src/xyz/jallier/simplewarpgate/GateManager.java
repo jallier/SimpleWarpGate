@@ -45,6 +45,22 @@ public class GateManager {
         return new ArrayList<>(gates);
     }
 
+    /**
+     * Return a new list (to prevent modifying the managers list state) from the active gates currently stored
+     * Also check to see if the self gate should be removed from the returned list
+     *
+     * @param removeSelf if the self gate should be removed from the returned list
+     * @param self       the gate to be removed from the list
+     * @return list of active gates
+     */
+    public List<Gate> getActiveGates(boolean removeSelf, Gate self) {
+        List<Gate> gates = new ArrayList<>(this.gates);
+        if (removeSelf) {
+            gates.remove(self);
+        }
+        return gates;
+    }
+
     public void loadStateFromFile() {
         Scanner scanner = null;
         try {
