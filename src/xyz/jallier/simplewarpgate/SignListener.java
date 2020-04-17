@@ -78,6 +78,11 @@ public class SignListener implements Listener {
             return;
         }
 
+        if(clickedGate.getSelectedDestination() == null){
+            // No destination selected
+            return;
+        }
+
         if (!clickedGate.portalIsActive()) {
             clickedGate.activatePortal();
         } else {

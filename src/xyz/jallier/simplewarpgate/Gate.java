@@ -1,5 +1,6 @@
 package xyz.jallier.simplewarpgate;
 
+import org.bukkit.Axis;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -7,6 +8,8 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
+import org.bukkit.block.data.Directional;
+import org.bukkit.block.data.Orientable;
 
 import java.util.List;
 import java.util.logging.Level;
@@ -88,7 +91,7 @@ public class Gate {
         sign.setLine(0, "§n" + name);
 
         GateManager gateManager = GateManager.getInstance();
-        List<Gate> gates = gateManager.getActiveGates();
+        List<Gate> gates = gateManager.getActiveGates(true, this);
         renderDisplay(sign, gates, cursorIndex, gateListWindowIndex);
         sign.update();
 
@@ -126,6 +129,11 @@ public class Gate {
         Block[] middleBlocks = getMiddleBlocks();
         for (Block block : middleBlocks) {
             block.setType(Material.NETHER_PORTAL);
+            if (direction.equals(BlockFace.EAST) || direction.equals(BlockFace.WEST)) {
+                Orientable orientation = (Orientable) block.getBlockData();
+                orientation.setAxis(Axis.Z);
+                block.setBlockData(orientation);
+            }
         }
         portalActive = true;
     }
@@ -202,7 +210,7 @@ public class Gate {
             renderDisplay(sign, gates, cursorIndex, gateListWindowIndex);
         }
 
-        int gateListIndex = gateListWindowIndex + cursorIndex - 1;
+        int gateListIndex = gateListWindowIndex + Math.max(cursorIndex, 1) - 1;
         Gate destinationGate = gates.get(gateListIndex);
         selectedDestination = destinationGate;
         Bukkit.getLogger().log(Level.INFO, "Destination gate set to: " + destinationGate.getName());
@@ -278,6 +286,9 @@ public class Gate {
 
         Block buttonBlock = signBlock.getRelative(directionIndices[0][2], 0, directionIndices[1][2]);
         buttonBlock.setType(Material.STONE_BUTTON);
+        Directional data = (Directional) buttonBlock.getBlockData();
+        data.setFacing(direction);
+        buttonBlock.setBlockData(data);
     }
 
     /**
