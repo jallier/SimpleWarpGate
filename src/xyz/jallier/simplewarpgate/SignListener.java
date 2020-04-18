@@ -194,6 +194,11 @@ public class SignListener implements Listener {
 
         logger.log(Level.INFO, "Creating new gate: " + gateName);
         Gate newGate = Gate.createGate(placedAgainst, signFaceDirection, gateName);
+        if (newGate == null) {
+            signChangeEvent.getPlayer().sendMessage("Could not create gate " + gateName + ". This name already exists");
+            logger.log(Level.INFO, "Could not create new gate: " + gateName + ". This name already exists");
+            return;
+        }
         logger.log(Level.INFO, "Created new gate " + gateName);
     }
 }

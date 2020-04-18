@@ -30,10 +30,27 @@ public class GateManager {
         return gateManager;
     }
 
-    public void addNewGate(Gate gate) {
-        if (!gates.contains(gate)) {
-            gates.add(gate);
+    /**
+     * Prevent a gate from having the same name as one already in the list
+     *
+     * @param name name to check
+     * @return if the name is unique
+     */
+    private boolean validateGateName(String name) {
+        for (Gate gate : gates) {
+            if (gate.getName().equals(name)) {
+                return false;
+            }
         }
+        return true;
+    }
+
+    public boolean addNewGate(Gate gate) {
+        if (!gates.contains(gate) && validateGateName(gate.getName())) {
+            gates.add(gate);
+            return true;
+        }
+        return false;
     }
 
     /**

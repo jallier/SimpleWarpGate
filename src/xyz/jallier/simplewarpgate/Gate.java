@@ -69,13 +69,14 @@ public class Gate {
         // TODO validate the gate name
         Gate gate = new Gate(startBlock, direction, name);
 
+        // Gate now created. Get an instance of the manager and add the new gate to it
+        GateManager manager = GateManager.getInstance();
+        if (!manager.addNewGate(gate)) {
+            return null;
+        }
         gate.clearMiddleBlocks();
         gate.addButton(gate.getSignBlock(), direction);
         gate.setInitialSignState(gate.getSignBlock());
-
-        // Gate now created. Get an instance of the manager and add the new gate to it
-        GateManager manager = GateManager.getInstance();
-        manager.addNewGate(gate);
 
         return gate;
     }
