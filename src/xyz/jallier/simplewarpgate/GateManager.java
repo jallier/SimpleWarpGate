@@ -86,6 +86,11 @@ public class GateManager {
                 scanner.close();
             }
         }
+
+        // Once the gates are loaded, refresh their signs
+        for (Gate gate : gates) {
+            gate.setInitialSignState(gate.getSignBlock());
+        }
     }
 
     private Location unserializeLocation(String worldName, String x, String y, String z) {

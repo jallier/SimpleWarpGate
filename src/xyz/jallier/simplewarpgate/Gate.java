@@ -80,7 +80,7 @@ public class Gate {
         return gate;
     }
 
-    private void setInitialSignState(Block signBlock) {
+    public void setInitialSignState(Block signBlock) {
         BlockState state = signBlock.getState();
         if (!(state instanceof Sign)) {
             Bukkit.getLogger().log(Level.INFO, "Block passed is not an instance of Sign");
@@ -158,7 +158,7 @@ public class Gate {
         return getButtonBlock().getLocation().equals(button.getLocation());
     }
 
-    private Block getSignBlock() {
+    public Block getSignBlock() {
         return startBlock.getRelative(direction);
     }
 

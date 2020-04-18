@@ -11,9 +11,6 @@ public class SimpleWarpGate extends JavaPlugin {
         GateManager.getInstance().loadStateFromFile();
         this.getLogger().log(Level.INFO, "Reading the data storage file");
 
-        GateManager gateManager = GateManager.getInstance();
-        // Load the gates or whatever here
-
         this.getCommand("ping").setExecutor(new CommandPing());
         this.getServer().getPluginManager().registerEvents(new SignListener(), this);
 
