@@ -19,14 +19,7 @@ import java.util.logging.Logger;
 
 public class SignListener implements Listener {
     private final Logger logger = Bukkit.getLogger();
-    private final String[] signOptions = new String[]{
-            "Rotorua",
-            "Pepega Castle",
-            "Ezyvet",
-            "Bradleys Hole",
-            "ay lmao",
-            "Can't think of other names",
-    };
+
     // TODO Handle breaking sign deactivating gate
 
     /**
@@ -36,18 +29,58 @@ public class SignListener implements Listener {
      */
     @EventHandler
     public void onPlayerPortalEvent(PlayerPortalEvent playerPortalEvent) {
-        // Check if the portal belongs to a gate
-        // TODO
-
         logger.log(Level.INFO, "Handling player portal");
         playerPortalEvent.setCancelled(true);
         Player player = playerPortalEvent.getPlayer();
+        Location playerLocation = player.getLocation();
+        GateManager gateManager = GateManager.getInstance();
+        List<Gate> gates = gateManager.getActiveGates();
+        logger.log(Level.INFO, player.getLocation() + "");
+        Gate activatedGate = null;
+        for (Gate gate : gates) {
+            Location location = gate.getStartBlock().getLocation();
+            double gateX = location.getX();
+            double playerX = playerLocation.getX();
+            double gateY = location.getY();
+            double playerY = playerLocation.getY();
+            double gateZ = location.getZ();
+            double playerZ = playerLocation.getZ();
+            if (
+                    (playerX >= gateX - 3 && playerX <= gateX + 3) &&
+                            (playerY >= gateY - 1 && playerY <= gateY + 1) &&
+                            (playerZ >= gateZ - 3 && playerZ <= gateZ + 3)
+            ) {
+                logger.log(Level.INFO, "player within the bounds of the portal");
+                activatedGate = gate;
+            }
+        }
 
-        // Need to check if safe to teleport the user to the location
-        Location playerCoords = player.getLocation();
-        player.teleport(playerCoords.add(0, 3, -10));
+        if (activatedGate == null) {
+            // portal does not belong to a gate; let it process normally
+            playerPortalEvent.setCancelled(false);
+            return;
+        }
 
-        // Then set the portal material in the portal back to air
+        // Very shoddy code to ensure player is looking same direction as portal on teleport
+        Gate destGate = activatedGate.getSelectedDestination();
+        Location location = destGate.getStartBlock().getLocation();
+        double distance = 1.25;
+        switch (destGate.getDirection()) {
+            case NORTH:
+            case SOUTH:
+                int modZ = destGate.getDirection().getModZ();
+                location.setYaw(modZ < 0 ? 180F : 0f);
+                location.add(modZ < 0 ? (distance + 1.0) : -distance, 0, 0.5);
+                break;
+            case EAST:
+            case WEST:
+                int modX = destGate.getDirection().getModX();
+                location.setYaw(modX < 0 ? 90F : -90F);
+                location.add(0.5, 0, modX < 0 ? -distance : (distance + 1));
+        }
+
+        destGate.deactivatePortal();
+        player.teleport(location);
     }
 
     /**
@@ -78,7 +111,7 @@ public class SignListener implements Listener {
             return;
         }
 
-        if(clickedGate.getSelectedDestination() == null){
+        if (clickedGate.getSelectedDestination() == null) {
             // No destination selected
             return;
         }

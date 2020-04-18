@@ -150,16 +150,6 @@ public class Gate {
         return portalActive;
     }
 
-    /**
-     * Get the location that the player will teleport to when they select this gate
-     *
-     * @return the location
-     */
-    public Location getDestination() {
-        int[][] directionIndices = getDirectionIndices(direction);
-        return getStartBlock().getRelative(directionIndices[0][0], -1, directionIndices[1][0]).getLocation();
-    }
-
     private Block getButtonBlock() {
         int[][] directionIndices = getDirectionIndices(direction);
         return getSignBlock().getRelative(directionIndices[0][2], 0, directionIndices[1][2]);
