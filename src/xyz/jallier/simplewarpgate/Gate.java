@@ -2,7 +2,6 @@ package xyz.jallier.simplewarpgate;
 
 import org.bukkit.Axis;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -188,7 +187,7 @@ public class Gate {
         int windowEnd = gateListWindowIndex + 2;
         int listEndPos = gates.size() - 1;
 
-        if (gates.size() > cursorIndex && cursorIndex <= 3) { // Move the curson down
+        if (gates.size() > cursorIndex && cursorIndex < 3) { // Move the curson down
             cursorIndex++;
             renderDisplay(sign, gates, cursorIndex, gateListWindowIndex);
         } else if (windowEnd < listEndPos) { // Scroll the list up without moving the cursor
@@ -208,7 +207,7 @@ public class Gate {
 
     private void renderDisplay(Sign sign, List<Gate> destinations, int cursorPosition, int listPosition) {
         int size = destinations.size();
-        if (size == 0 || size > 3) {
+        if (size == 0) {
             return;
         }
         int index = listPosition;
