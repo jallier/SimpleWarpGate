@@ -24,6 +24,11 @@ public class GateManager {
         gates = new ArrayList<>();
     }
 
+    /**
+     * Create a new instance of the manager, or return the existing one if already created
+     *
+     * @return the GateManager instance
+     */
     public static GateManager getInstance() {
         if (gateManager == null) {
             gateManager = new GateManager();
@@ -46,6 +51,12 @@ public class GateManager {
         return true;
     }
 
+    /**
+     * Add a new gate to the global list
+     *
+     * @param gate the gate to add
+     * @return false if gate already exists
+     */
     public boolean addNewGate(Gate gate) {
         if (!gates.contains(gate) && validateGateName(gate.getName())) {
             gates.add(gate);
@@ -54,6 +65,12 @@ public class GateManager {
         return false;
     }
 
+    /**
+     * Remove a gate from the global list
+     *
+     * @param gate the gate to remove
+     * @return success of the removal
+     */
     public boolean removeGate(Gate gate) {
         if (gates.size() != 0) {
             gates.remove(gate);
@@ -87,6 +104,9 @@ public class GateManager {
         return gates;
     }
 
+    /**
+     * Load the plugin state from disk, and initialize it
+     */
     public void loadStateFromFile() {
         Scanner scanner = null;
         try {
@@ -119,6 +139,15 @@ public class GateManager {
         }
     }
 
+    /**
+     * Create a new Location from its string representation
+     *
+     * @param worldName name of the world for the location
+     * @param x         x coordinate
+     * @param y         y coordinate
+     * @param z         z coordinate
+     * @return The new Location
+     */
     private Location unserializeLocation(String worldName, String x, String y, String z) {
         World world = Bukkit.getWorld(worldName);
         int intX = Integer.parseInt(x);
@@ -127,6 +156,9 @@ public class GateManager {
         return new Location(world, intX, intY, intZ);
     }
 
+    /**
+     * Write the current state to file
+     */
     public void writeStateToFile() {
         String newlineChar = System.getProperty("line.separator");
         BufferedWriter writer = null;

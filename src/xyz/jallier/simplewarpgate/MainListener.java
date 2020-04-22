@@ -21,7 +21,11 @@ import java.util.logging.Logger;
 public class MainListener implements Listener {
     private final Logger logger = Bukkit.getLogger();
 
-    // TODO Handle breaking sign deactivating gate
+    /**
+     * Handle destroying gates
+     *
+     * @param blockBreakEvent event
+     */
     public void onBlockBreakEvent(BlockBreakEvent blockBreakEvent) {
         Block brokenBlock = blockBreakEvent.getBlock();
         Material blockType = brokenBlock.getType();

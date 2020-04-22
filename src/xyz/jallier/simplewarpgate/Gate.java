@@ -13,19 +13,47 @@ import org.bukkit.block.data.Orientable;
 import java.util.List;
 import java.util.logging.Level;
 
+/**
+ * Represents a Gate object which is used to check if the shape is correct and manage the state of each individual gate
+ */
 public class Gate {
     /**
      * This is the block the sign is placed against. Should be middle right
      */
     private final Block startBlock;
+    /**
+     * Direction of the gate
+     */
     private final BlockFace direction;
+    /**
+     * Name of the gate
+     */
     private final String name;
 
+    /**
+     * The position of the selected destination gate cursor
+     */
     private int cursorIndex;
+    /**
+     * The start of the 3 displayed destination gates
+     */
     private int gateListWindowIndex;
+    /**
+     * The selected destination
+     */
     private Gate selectedDestination;
+    /**
+     * If the portal should show the portal material
+     */
     private boolean portalActive;
 
+    /**
+     * Construct a new gate
+     *
+     * @param startBlock The block that the sign was placed against
+     * @param direction  The direction of the gate (and sign)
+     * @param name       The name of the gate
+     */
     public Gate(Block startBlock, BlockFace direction, String name) {
         this.startBlock = startBlock;
         this.direction = direction;
@@ -36,6 +64,11 @@ public class Gate {
         portalActive = false;
     }
 
+    /**
+     * Create a string representation of the gate. Used to store its state to file
+     *
+     * @return string representing the gate state
+     */
     @Override
     public String toString() {
         String world = startBlock.getWorld().getName();
@@ -46,14 +79,29 @@ public class Gate {
         return String.format("%s::%s::%s,%s,%s::%s", name, world, x, y, z, direction);
     }
 
+    /**
+     * Get name
+     *
+     * @return gate name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Get start block
+     *
+     * @return start block
+     */
     public Block getStartBlock() {
         return startBlock;
     }
 
+    /**
+     * Get direction
+     *
+     * @return direction
+     */
     public BlockFace getDirection() {
         return direction;
     }
@@ -81,6 +129,11 @@ public class Gate {
         return gate;
     }
 
+    /**
+     * Set the state of the display sign after the gate has been created for the first time
+     *
+     * @param signBlock The sign block to operate on
+     */
     public void setInitialSignState(Block signBlock) {
         BlockState state = signBlock.getState();
         if (!(state instanceof Sign)) {
@@ -94,11 +147,11 @@ public class Gate {
         List<Gate> gates = gateManager.getActiveGates(true, this);
         renderDisplay(sign, gates, cursorIndex, gateListWindowIndex);
         sign.update();
-
-        Bukkit.getLogger().log(Level.INFO, "Updated the sign");
-        Bukkit.getLogger().log(Level.INFO, "Set gate name to " + name);
     }
 
+    /**
+     * Set the middle blocks of the gate to air
+     */
     private void clearMiddleBlocks() {
         Block[] middleBlocks = getMiddleBlocks();
         for (Block block : middleBlocks) {
@@ -106,6 +159,11 @@ public class Gate {
         }
     }
 
+    /**
+     * Find the middle blocks of the gate and return them
+     *
+     * @return array of the middle blocks of the gate
+     */
     private Block[] getMiddleBlocks() {
         int[][] directionIndices = getDirectionIndices(direction);
         Block[] middleBlocks = new Block[6];
@@ -122,6 +180,9 @@ public class Gate {
         return middleBlocks;
     }
 
+    /**
+     * Set the portal to active, and set the middle blocks to portal material
+     */
     public void activatePortal() {
         if (selectedDestination == null) { // Only allow if destination has already been set
             return;
@@ -138,6 +199,9 @@ public class Gate {
         portalActive = true;
     }
 
+    /**
+     * Set the portal to inactive and set the middle blocks to air
+     */
     public void deactivatePortal() {
         Block[] middleBlocks = getMiddleBlocks();
         for (Block block : middleBlocks) {
@@ -146,23 +210,49 @@ public class Gate {
         portalActive = false;
     }
 
+    /**
+     * Return if portal is active
+     *
+     * @return if portal is active
+     */
     public boolean portalIsActive() {
         return portalActive;
     }
 
+    /**
+     * Return the button block (the actual button, not the block it is attached to)
+     *
+     * @return button block
+     */
     private Block getButtonBlock() {
         int[][] directionIndices = getDirectionIndices(direction);
         return getSignBlock().getRelative(directionIndices[0][2], 0, directionIndices[1][2]);
     }
 
+    /**
+     * Check if a button belongs to the gate
+     *
+     * @param button the button block to check
+     * @return If the button does belong to the gate
+     */
     public boolean buttonBelongsToGate(Block button) {
         return getButtonBlock().getLocation().equals(button.getLocation());
     }
 
+    /**
+     * Get sign block
+     *
+     * @return the sign block
+     */
     public Block getSignBlock() {
         return startBlock.getRelative(direction);
     }
 
+    /**
+     * Get sign block state
+     *
+     * @return sign block state
+     */
     private Sign getSignBlockState() {
         return (Sign) getSignBlock().getState();
     }
@@ -206,6 +296,14 @@ public class Gate {
         Bukkit.getLogger().log(Level.INFO, "Destination gate set to: " + destinationGate.getName());
     }
 
+    /**
+     * Render the destinations on the display sign. Since signs can only display 3 lines, we must scroll through the destinations as needed
+     *
+     * @param sign           the sign to render on
+     * @param destinations   the list of total destinations
+     * @param cursorPosition the position of the selection cursor
+     * @param listPosition   the position of the start of the list of destinations to display
+     */
     private void renderDisplay(Sign sign, List<Gate> destinations, int cursorPosition, int listPosition) {
         int size = destinations.size();
         if (size == 0) {
@@ -213,7 +311,6 @@ public class Gate {
         }
         int index = listPosition;
         for (int i = 1; i < 4; i++) {
-//            Bukkit.getLogger().log(Level.INFO, "Index is: " + index);
             String name;
             if (index < size) {
                 Gate gate = destinations.get(index);
@@ -294,6 +391,14 @@ public class Gate {
     }
 
     // assuming base block is top right corner
+
+    /**
+     * Check if a gate is valid. To be valid it must have the same shape and materials as a vanilla nether portal
+     *
+     * @param baseBlock the start block to check. This must be the top right corner of the gate
+     * @param direction the direction the gate is facing
+     * @return if the gate is valid or not
+     */
     private static boolean checkGate(Block baseBlock, BlockFace direction) {
         Block nextBlock = baseBlock;
 
@@ -311,6 +416,14 @@ public class Gate {
         return topLine && firstLine && secondLine && thirdLine && bottomLine;
     }
 
+    /**
+     * Check if a line of the gate is valid
+     *
+     * @param baseBlock the start block. This should be the rightmost block in the line
+     * @param direction the direction of the gate
+     * @param isEndLine if the line is the top of bottom of the gate
+     * @return if the line is valid
+     */
     private static boolean checkGateLine(Block baseBlock, BlockFace direction, boolean isEndLine) {
         // assume north facing as default
         int[][] directionIndices = getDirectionIndices(direction);
@@ -337,6 +450,11 @@ public class Gate {
         return true;
     }
 
+    /**
+     * Get selected destination
+     *
+     * @return selected destionation
+     */
     public Gate getSelectedDestination() {
         return selectedDestination;
     }
