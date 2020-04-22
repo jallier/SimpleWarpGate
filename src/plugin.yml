@@ -3,7 +3,3 @@ version: '1'
 author: jallier
 main: xyz.jallier.simplewarpgate.SimpleWarpGate
 api-version: '1.15'
-commands:
-  ping:
-    description: Test the plugin is working as intended
-    usage: /ping

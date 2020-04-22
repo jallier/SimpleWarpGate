@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class SignListener implements Listener {
+public class MainListener implements Listener {
     private final Logger logger = Bukkit.getLogger();
 
     // TODO Handle breaking sign deactivating gate
