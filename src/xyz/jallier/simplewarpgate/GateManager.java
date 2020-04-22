@@ -10,6 +10,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.logging.Level;
 
 /**
  * Manage the state of all the gates in the worlds
@@ -48,6 +49,14 @@ public class GateManager {
     public boolean addNewGate(Gate gate) {
         if (!gates.contains(gate) && validateGateName(gate.getName())) {
             gates.add(gate);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean removeGate(Gate gate) {
+        if (gates.size() != 0) {
+            gates.remove(gate);
             return true;
         }
         return false;
@@ -97,7 +106,7 @@ public class GateManager {
                 Gate gate = Gate.createGate(startBlock, direction, name);
             }
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            Bukkit.getLogger().log(Level.INFO, "No SimpleWarpGate data file found, no gates to load");
         } finally {
             if (scanner != null) {
                 scanner.close();

@@ -9,6 +9,7 @@ import org.bukkit.block.data.type.WallSign;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
@@ -21,6 +22,31 @@ public class SignListener implements Listener {
     private final Logger logger = Bukkit.getLogger();
 
     // TODO Handle breaking sign deactivating gate
+    public void onBlockBreakEvent(BlockBreakEvent blockBreakEvent) {
+        Block brokenBlock = blockBreakEvent.getBlock();
+        Material blockType = brokenBlock.getType();
+        if (!(blockType == Material.OBSIDIAN
+                || blockType == Material.OAK_WALL_SIGN
+                || blockType == Material.STONE_BUTTON
+        )) {
+            return; // We only care about signs, stone buttons and obsidian blocks
+        }
+
+        // Check if the broken block belonged to a gate
+        GateManager gateManager = GateManager.getInstance();
+        Gate brokenGate = null;
+        List<Gate> gates = gateManager.getActiveGates();
+        for (Gate gate : gates) {
+            if (Gate.checkBlocksAreValid(gate.getStartBlock(), gate.getDirection())) {
+                brokenGate = gate;
+            }
+        }
+        if (brokenGate == null) {
+            return;
+        }
+
+        gateManager.removeGate(brokenGate);
+    }
 
     /**
      * Handle the player entering the portal

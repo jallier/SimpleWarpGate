@@ -329,12 +329,6 @@ public class Gate {
             if (baseBlock.getType() != Material.OBSIDIAN) {
                 return false;
             }
-            if (mid1.getType() == Material.OBSIDIAN) {
-                return false;
-            }
-            if (mid2.getType() == Material.OBSIDIAN) {
-                return false;
-            }
             if (opposite.getType() != Material.OBSIDIAN) {
                 return false;
             }
